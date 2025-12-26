@@ -80,6 +80,7 @@ struct StoryVideoPlayer: UIViewControllerRepresentable {
         coordinator.cleanup()
     }
     
+    @MainActor
     class Coordinator: NSObject {
         let onReady: () -> Void
         let onEnd: () -> Void
@@ -119,36 +120,28 @@ struct StoryVideoPlayer: UIViewControllerRepresentable {
         func observePlayer(_ player: AVPlayer) {
             // Observe ready state
             let statusObservation = player.observe(\.status, options: [.new]) { [weak self] player, _ in
-                guard let self = self else { return }
-                
-                if player.status == .readyToPlay {
-                    self.isReadyToPlay = true
-//                    DispatchQueue.main.async {
-//                        self.onReady()
-//                    }
-                    
-                    // ✅ NEW: Report video duration when ready
-                    self.reportVideoDuration(player: player)
-                    
-                } else if player.status == .failed {
-                    Logger.error("❌ Video player failed to load")
+                Task { @MainActor in
+                    guard let self else { return }
+
+                    if player.status == .readyToPlay {
+                        self.isReadyToPlay = true
+                        self.reportVideoDuration(player: player)
+                    } else if player.status == .failed {
+                        Logger.error("❌ Video player failed to load")
+                    }
                 }
             }
             observations.append(statusObservation)
             
             // ✅ NEW: Observe duration changes (for progressive loading)
             if let currentItem = player.currentItem {
-                let durationObservation = currentItem.observe(
-                    \.duration,
-                    options: [.new]
-                ) { [weak self] item, _ in
-                    guard let self = self else { return }
-                    
-                    let duration = item.duration
-                    if duration.isNumeric && !duration.isIndefinite {
+                let durationObservation = currentItem.observe(\.duration, options: [.new]) { [weak self] _, _ in
+                    Task { @MainActor in
+                        guard let self else { return }
                         self.reportVideoDuration(player: player)
                     }
                 }
+
                 observations.append(durationObservation)
             }
             
@@ -156,9 +149,11 @@ struct StoryVideoPlayer: UIViewControllerRepresentable {
             notificationToken = NotificationCenter.default.addObserver(
                 forName: .AVPlayerItemDidPlayToEndTime,
                 object: player.currentItem,
-                queue: .main
+                queue: nil
             ) { [weak self] _ in
-                self?.onEnd()
+                Task { @MainActor in
+                    self?.onEnd()
+                }
             }
         }
         
@@ -205,10 +200,6 @@ struct StoryVideoPlayer: UIViewControllerRepresentable {
             isReadyToPlay = false
             hasDurationBeenReported = false
             wasActive = true
-        }
-        
-        deinit {
-            cleanup()
         }
     }
 }

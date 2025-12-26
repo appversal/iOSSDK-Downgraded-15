@@ -129,13 +129,15 @@ final class CampaignAudioManager {
         NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: player.currentItem,
-            queue: .main
+            queue: nil
         ) { [weak self] _ in
-            self?.currentPlayer = nil
-            Logger.debug("✅ Sound playback completed")
+            Task { @MainActor in
+                self?.currentPlayer = nil
+                Logger.debug("✅ Sound playback completed")
+            }
         }
     }
-    
+
     private func configureAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
@@ -169,13 +171,14 @@ final class CampaignAudioManager {
     }
     
     private func setupNotificationObservers() {
-        // Pause on app backgrounding
         NotificationCenter.default.addObserver(
             forName: UIApplication.didEnterBackgroundNotification,
             object: nil,
-            queue: .main
+            queue: nil
         ) { [weak self] _ in
-            self?.stopAll()
+            Task { @MainActor in
+                self?.stopAll()
+            }
         }
     }
     
