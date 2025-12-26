@@ -40,10 +40,10 @@ class TransitionDetectorViewController: UIViewController {
     private var displayLink: CADisplayLink?
     private weak var activeCoordinator: UIViewControllerTransitionCoordinator?
     
-    deinit {
-        stopDisplayLink()
-    }
-    
+//    deinit {
+//        stopDisplayLink()
+//    }
+//    
     // MARK: - Disappear detection
     
     override func viewWillDisappear(_ animated: Bool) {
