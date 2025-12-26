@@ -177,25 +177,34 @@ public class AppStorys: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.elementRegistry.invalidateCache()
-            self?.invalidateDeviceAttributesCache()  // ✅ NEW
-            Logger.debug("📱 Orientation changed - invalidated element cache")
+            guard let self else { return }
+            Task { @MainActor in
+                self.elementRegistry.invalidateCache()
+                self.invalidateDeviceAttributesCache()
+                Logger.debug("📱 Orientation changed - invalidated caches")
+            }
         }
-        
+
         NotificationCenter.default.addObserver(
             forName: UIApplication.keyboardWillShowNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.elementRegistry.invalidateCache()
+            guard let self else { return }
+            Task { @MainActor in
+                self.elementRegistry.invalidateCache()
+            }
         }
-        
+
         NotificationCenter.default.addObserver(
             forName: UIApplication.keyboardWillHideNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.elementRegistry.invalidateCache()
+            guard let self else { return }
+            Task { @MainActor in
+                self.elementRegistry.invalidateCache()
+            }
         }
     }
     

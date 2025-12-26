@@ -510,26 +510,35 @@ extension ElementRegistry {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.invalidateCache()
+            guard let self else { return }
+            Task { @MainActor in
+                self.invalidateCache()
+            }
         }
-        
+
         NotificationCenter.default.addObserver(
             forName: UIApplication.keyboardWillShowNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.invalidateCache()
+            guard let self else { return }
+            Task { @MainActor in
+                self.invalidateCache()
+            }
         }
-        
+
         NotificationCenter.default.addObserver(
             forName: UIApplication.keyboardWillHideNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.invalidateCache()
+            guard let self else { return }
+            Task { @MainActor in
+                self.invalidateCache()
+            }
         }
     }
-    
+
     nonisolated public func stopObserving() {
         NotificationCenter.default.removeObserver(self)
     }
