@@ -341,15 +341,16 @@ fileprivate struct ScratchCardTermsSheet: View {
         .padding()
     }
 }
-@MainActor
-fileprivate struct ViewHeightKey: @MainActor PreferenceKey {
-    static var defaultValue: CGFloat = 0
+
+fileprivate struct ViewHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
     }
 }
 
-// MARK: - View Extension
+// MARK: - View Extensions
 
 extension View {
     public func withAppStorysOverlays(
