@@ -300,7 +300,9 @@ fileprivate struct ScratchCardTermsSheet: View {
             }
             .offset(y: (isPresented && !isDismissing) ? 0 : UIScreen.main.bounds.height)
             .onPreferenceChange(ViewHeightKey.self) { height in
-                contentHeight = height
+                Task { @MainActor in
+                    contentHeight = height
+                }
             }
             .swipeToDismiss(
                 isPresented: $isPresented,

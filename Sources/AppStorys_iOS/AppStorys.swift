@@ -1102,31 +1102,37 @@ public class AppStorys: ObservableObject {
             )
             
             switch result {
+
             case .success(let stepCount):
-                Logger.info(" Tooltip presented with \(stepCount) steps")
-                
-            case .failure(.noTargetsFound(let missing)):
-                Logger.error("â Œ Tooltip failed - missing elements: \(missing)")
-                
-                await trackEvents(
-                    eventType: "presentation_failed",
-                    campaignId: campaign.id,
-                    metadata: [
-                        "reason": "missing_elements",
-                        "missing_targets": missing.joined(separator: ","),
-                        "screen": currentScreen ?? "unknown"
-                    ]
-                )
-                
-            case .failure(.invalidCampaign):
-                Logger.error("â Œ Invalid tooltip campaign")
-                
-            case .failure(.alreadyPresenting):
-                Logger.debug("â ­ Tooltip already presenting, skipping")
-                
-            @unknown default:
-                Logger.error("â Œ Unknown tooltip presentation error")
+                Logger.info("Tooltip presented with \(stepCount) steps")
+
+            case .failure(let error):
+                switch error {
+
+                case .noTargetsFound(let missing):
+                    Logger.error("❌ Tooltip failed - missing elements: \(missing)")
+
+                    await trackEvents(
+                        eventType: "presentation_failed",
+                        campaignId: campaign.id,
+                        metadata: [
+                            "reason": "missing_elements",
+                            "missing_targets": missing.joined(separator: ","),
+                            "screen": currentScreen ?? "unknown"
+                        ]
+                    )
+
+                case .invalidCampaign:
+                    Logger.error("❌ Invalid tooltip campaign")
+
+                case .alreadyPresenting:
+                    Logger.debug("⏭ Tooltip already presenting, skipping")
+
+                case .managerNotInitialized:
+                    Logger.error("❌ Tooltip manager not initialized (SDK lifecycle violation)")
+                }
             }
+
         }
     }
     
